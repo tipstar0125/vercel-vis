@@ -3,7 +3,7 @@ mod util;
 
 #[wasm_bindgen]
 pub fn gen(seed: i32) -> String {
-    util::gen(seed as usize+1).to_string()
+    util::gen(seed as usize).to_string()
 }
 
 #[wasm_bindgen(getter_with_clone)]

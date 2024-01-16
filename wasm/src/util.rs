@@ -2,6 +2,7 @@
 use proconio::input;
 use svg::node::element::{Rectangle, Line};
 use itertools::Itertools;
+use rand::prelude::*;
 
 pub struct Input {
     pub N: usize,
@@ -67,27 +68,27 @@ pub fn parse_output(f: &str) -> Output {
 }
 
 pub fn gen(seed: usize) -> Input {
-    rnd::init(seed);
-    let N = rnd::gen_range(8, 31);
-    let C = rnd::gen_range(1, 7);
-    let P = rnd::gen_float() / 4.0;
+    let mut rng = rand_chacha::ChaCha20Rng::seed_from_u64(seed as u64);
+    let N = rng.gen_range(8, 31);
+    let C = rng.gen_range(1, 7);
+    let P = rng.gen::<f64>() / 4.0;
 
     'outer: loop {
         let mut grid = vec![vec![0; N]; N];
         for c in 1..=C {
             for _ in 0..N {
-                let mut y = rnd::gen_range(0, N);
-                let mut x = rnd::gen_range(0, N);
+                let mut y = rng.gen_range(0, N);
+                let mut x = rng.gen_range(0, N);
                 while grid[y][x] != 0 {
-                    y = rnd::gen_range(0, N);
-                    x = rnd::gen_range(0, N);
+                    y = rng.gen_range(0, N);
+                    x = rng.gen_range(0, N);
                 }
                 grid[y][x] = c as isize;
             }
         }
         for y in 0..N {
             for x in 0..N {
-                if grid[y][x] == 0 && rnd::gen_float() < P {
+                if grid[y][x] == 0 && rng.gen::<f64>() < P {
                     grid[y][x] = -1;
                 }
             }
@@ -189,63 +190,4 @@ pub fn vis(input: &Input, out: &Output, turn: usize)-> (i64, String, String) {
         }
     }
     (0, "".to_string(), doc.to_string())
-}
-
-mod rnd {
-    static mut S: usize = 0;
-    static MAX: usize = 1e9 as usize;
-
-    #[inline]
-    pub fn init(seed: usize) {
-        unsafe {
-            if seed == 0 {
-                let t = std::time::SystemTime::now()
-                    .duration_since(std::time::UNIX_EPOCH)
-                    .unwrap()
-                    .as_secs() as usize;
-                S = t
-            } else {
-                S = seed;
-            }
-        }
-    }
-    #[inline]
-    pub fn gen() -> usize {
-        unsafe {
-            if S == 0 {
-                init(0);
-            }
-            S ^= S << 7;
-            S ^= S >> 9;
-            S
-        }
-    }
-    #[inline]
-    pub fn gen_range(a: usize, b: usize) -> usize {
-        gen() % (b - a) + a
-    }
-    #[inline]
-    pub fn gen_bool() -> bool {
-        gen() & 1 == 1
-    }
-    #[inline]
-    pub fn gen_range_isize(a: usize) -> isize {
-        let mut x = (gen() % a) as isize;
-        if gen_bool() {
-            x *= -1;
-        }
-        x
-    }
-    #[inline]
-    pub fn gen_range_neg_wrapping(a: usize) -> usize {
-        let mut x = gen() % a;
-        if gen_bool() {
-            x = x.wrapping_neg();
-        }
-        x
-    }
-    #[inline]
-    pub fn gen_float() -> f64 {
-        ((gen() % 1000) as f64) / 1000.0
-    }
 }
